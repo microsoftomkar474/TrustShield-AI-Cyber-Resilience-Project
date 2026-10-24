@@ -1,0 +1,210 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   TrustShield AI — Cyber Resilience Design System
+   ============================================================ */
+
+/* --- Base Styles --- */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-shield-primary text-slate-100 font-sans antialiased;
+    background: radial-gradient(ellipse at top, #0f1f3d 0%, #0f172a 50%, #080d1a 100%);
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-shield-primary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-shield-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-shield-muted;
+  }
+}
+
+/* --- Glass Panel Component --- */
+@layer components {
+  .glass-panel {
+    @apply bg-shield-secondary border border-shield-border rounded-2xl;
+    background: rgba(30, 41, 59, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  /* --- Risk Badge --- */
+  .risk-badge-low {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold;
+    @apply bg-emerald-500/20 text-emerald-400 border border-emerald-500/30;
+  }
+
+  .risk-badge-medium {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold;
+    @apply bg-amber-500/20 text-amber-400 border border-amber-500/30;
+  }
+
+  .risk-badge-high {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold;
+    @apply bg-red-500/20 text-red-400 border border-red-500/30;
+  }
+
+  /* --- Primary Button --- */
+  .btn-primary {
+    @apply flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white;
+    @apply transition-all duration-200 ease-out;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    @apply scale-[1.02];
+    box-shadow: 0 6px 25px rgba(59, 130, 246, 0.5);
+  }
+
+  .btn-primary:active:not(:disabled) {
+    @apply scale-[0.98];
+  }
+
+  .btn-primary:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  /* --- Tab Button --- */
+  .tab-btn {
+    @apply flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm;
+    @apply transition-all duration-200;
+  }
+
+  .tab-btn-active {
+    @apply tab-btn text-white;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  }
+
+  .tab-btn-inactive {
+    @apply tab-btn text-slate-400 hover:text-slate-200 hover:bg-slate-700/50;
+  }
+
+  /* --- Input Field --- */
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl text-slate-100 placeholder-slate-500;
+    @apply border border-shield-border bg-slate-800/50;
+    @apply focus:outline-none focus:border-shield-accent focus:ring-2 focus:ring-shield-accent/20;
+    @apply transition-all duration-200;
+    font-family: inherit;
+  }
+
+  /* --- Indicator Card --- */
+  .indicator-card {
+    @apply p-4 rounded-xl border;
+    background: rgba(15, 23, 42, 0.5);
+  }
+
+  .indicator-card-high {
+    @apply indicator-card border-red-500/30 bg-red-500/5;
+  }
+
+  .indicator-card-medium {
+    @apply indicator-card border-amber-500/30 bg-amber-500/5;
+  }
+
+  .indicator-card-low {
+    @apply indicator-card border-blue-500/30 bg-blue-500/5;
+  }
+
+  /* --- Score Bar --- */
+  .score-bar-fill-low {
+    @apply h-full rounded-full;
+    background: linear-gradient(90deg, #10b981, #34d399);
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .score-bar-fill-medium {
+    @apply h-full rounded-full;
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .score-bar-fill-high {
+    @apply h-full rounded-full;
+    background: linear-gradient(90deg, #ef4444, #f87171);
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* --- Animations --- */
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  /* Shimmer loading effect */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(30, 41, 59, 0) 0%,
+      rgba(59, 130, 246, 0.1) 50%,
+      rgba(30, 41, 59, 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  /* Scanning animation for loading state */
+  .scan-line {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .scan-line::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+    animation: scanLine 2s ease-in-out infinite;
+  }
+
+  @keyframes scanLine {
+    0% { left: -100%; }
+    100% { left: 100%; }
+  }
+}
