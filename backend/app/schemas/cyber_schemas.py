@@ -274,3 +274,23 @@ class IncidentGuidanceResponse(BaseModel):
     context: str
     actions: List[IncidentAction]
     disclaimer: str
+
+    
+# ============================================================
+# F6: Cyber Investigation Report Schemas
+# ============================================================
+
+class ReportRequest(BaseModel):
+    """Request body for POST /api/v1/cyber/generate-report"""
+    scan_type: str = Field(..., description="'url' or 'message'")
+    scan_data: Dict[str, Any] = Field(..., description="The full scan response object")
+    user_notes: Optional[str] = Field(default=None, description="Optional user notes for the report")
+
+
+class ReportResponse(BaseModel):
+    """Response body for POST /api/v1/cyber/generate-report"""
+    status: str = "success"
+    report_id: str
+    generated_at: str
+    scan_type: str
+    report_data: Dict[str, Any]
