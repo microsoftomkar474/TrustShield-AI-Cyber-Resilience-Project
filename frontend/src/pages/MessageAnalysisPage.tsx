@@ -5,6 +5,8 @@ import type { MessageScanResponse, AnalysisState } from '../types/api';
 import RiskBadge from '../components/RiskBadge';
 import ScoreBar from '../components/ScoreBar';
 import IndicatorList from '../components/IndicatorList';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const MAX_MESSAGE_LENGTH = 10000;
 
@@ -83,15 +85,88 @@ export default function MessageAnalysisPage() {
     if (!state.data) return;
     try {
       const result = await generateReport('message', state.data);
-      const blob = new Blob([JSON.stringify(result.report_data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `trustshield-report-${result.report_id}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      const report = result.report_data;
+
+      const doc = new jsPDF();
+
+      // Header
+      doc.setFontSize(22);
+      doc.setTextColor(20, 20, 20);
+      doc.text("TrustShield AI — Cyber Resilience Report", 14, 20);
+
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Report ID: ${report.report_id}`, 14, 28);
+      doc.text(`Generated At: ${new Date(report.generated_at).toLocaleString()}`, 14, 34);
+      doc.text(`Scan Type: ${report.scan_type}`, 14, 40);
+
+      // Risk Summary Box
+      doc.setDrawColor(200, 200, 200);
+      doc.setFillColor(245, 245, 245);
+      doc.rect(14, 48, 182, 25, 'FD');
+
+      doc.setFontSize(14);
+      const isHigh = report.summary.risk_label === 'HIGH';
+      doc.setTextColor(isHigh ? 200 : 20, 0, 0);
+      doc.text(`Risk Assessment: ${report.summary.risk_label} (${(report.summary.risk_score * 100).toFixed(1)}%)`, 18, 58);
+
+      doc.setFontSize(10);
+      doc.setTextColor(80, 80, 80);
+      doc.text(`Input Analysed: ${report.input}`, 18, 66);
+
+      // Indicators Table
+      doc.setFontSize(14);
+      doc.setTextColor(20, 20, 20);
+      doc.text("Detected Indicators", 14, 85);
+
+      const indicatorData = report.indicators.map((ind: any) => [
+        ind.code,
+        ind.description,
+        ind.risk_contribution
+      ]);
+
+      autoTable(doc, {
+        startY: 90,
+        head: [['Code', 'Description', 'Risk Level']],
+        body: indicatorData,
+        theme: 'grid',
+        headStyles: { fillColor: [40, 40, 40] },
+      });
+
+      // Recommendations
+      let finalY = (doc as any).lastAutoTable.finalY + 15;
+
+      if (finalY > 250) {
+        doc.addPage();
+        finalY = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.text("Recommendations", 14, finalY);
+
+      doc.setFontSize(10);
+      doc.setTextColor(60, 60, 60);
+      let recY = finalY + 8;
+
+      report.recommendations.forEach((rec: string) => {
+        const splitText = doc.splitTextToSize(`• ${rec}`, 180);
+        doc.text(splitText, 14, recY);
+        recY += (splitText.length * 5) + 3;
+      });
+
+      // Disclaimer
+      if (recY > 260) {
+        doc.addPage();
+        recY = 20;
+      }
+
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      const splitDisclaimer = doc.splitTextToSize(report.disclaimer, 180);
+      doc.text(splitDisclaimer, 14, recY + 10);
+
+      doc.save(`TrustShield-Report-${report.report_id}.pdf`);
+
     } catch (err) {
       alert('Failed to generate report. Please try again.');
     }
@@ -287,7 +362,7 @@ export default function MessageAnalysisPage() {
               className="mt-3 w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-              Download Investigation Report (JSON)
+              Download Investigation Report (PDF)
             </button>
           </div>
 
