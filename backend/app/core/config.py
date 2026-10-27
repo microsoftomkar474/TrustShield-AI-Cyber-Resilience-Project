@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     urlhaus_api_url: str = Field(
         default="https://urlhaus-api.abuse.ch/v1/"
     )
+    urlhaus_auth_key: str = Field(default="")
     phishtank_api_key: str = Field(default="")
     phishtank_api_url: str = Field(
         default="https://checkurl.phishtank.com/checkurl/"

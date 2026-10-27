@@ -40,6 +40,7 @@ class ThreatIntelligenceService:
         self.enabled = settings.threat_intel_enabled
         self.timeout = settings.threat_intel_timeout_seconds
         self.urlhaus_url = settings.urlhaus_api_url
+        self.urlhaus_auth_key = settings.urlhaus_auth_key
         self.phishtank_api_key = settings.phishtank_api_key
         self.phishtank_url = settings.phishtank_api_url
 
@@ -82,12 +83,24 @@ class ThreatIntelligenceService:
           url_info: dict with url_status, threat, etc.
         """
         queried_at = datetime.now(timezone.utc).isoformat()
+        if not self.urlhaus_auth_key:
+            return ThreatIntelResult(
+                source="URLhaus (abuse.ch)",
+                found=False,
+                status="Lookup unavailable: Auth-Key not configured",
+                queried_at=queried_at,
+                error="URLhaus Auth-Key is missing. Local analysis still applies.",
+                is_mock=False,
+            )
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response = await client.post(
                     self.urlhaus_url + "url/",
                     data={"url": url},   # Form data, not JSON
-                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                    headers={
+    "Content-Type": "application/x-www-form-urlencoded",
+    "Auth-Key": self.urlhaus_auth_key,
+},
                 )
                 response.raise_for_status()
                 data = response.json()
