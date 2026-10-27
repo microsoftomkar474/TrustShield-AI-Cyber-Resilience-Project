@@ -53,6 +53,24 @@ export async function analyseMessage(message: string): Promise<MessageScanRespon
 }
 
 /**
+ * Generate personalized incident response guidance.
+ */
+export async function getIncidentGuidance(
+  indicatorCodes: string[],
+  context: 'URL' | 'MESSAGE'
+): Promise<any> {
+  try {
+    const response = await apiClient.post('/incident-guidance', {
+      indicator_codes: indicatorCodes,
+      context: context,
+    });
+    return response.data;
+  } catch (error) {
+    throw extractError(error, 'Incident guidance failed');
+  }
+}
+
+/**
  * Check backend health.
  * Used to show connection status in the dashboard.
  */

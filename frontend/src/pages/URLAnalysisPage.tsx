@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react';
-import { analyseURL } from '../services/api';
+import { analyseURL, getIncidentGuidance } from '../services/api';
 import type { URLScanResponse, AnalysisState } from '../types/api';
 import RiskBadge from '../components/RiskBadge';
 import ScoreBar from '../components/ScoreBar';
@@ -50,6 +50,10 @@ export default function URLAnalysisPage() {
   });
   const [activeTab, setActiveTab] = useState<'indicators' | 'ti' | 'parsed' | 'recs'>('indicators');
 
+  // F4: Incident Response state
+  const [incidentData, setIncidentData] = useState<any>(null);
+  const [incidentLoading, setIncidentLoading] = useState(false);
+
   const urlLength = url.trim().length;
   const isValidLength = urlLength > 0 && urlLength <= MAX_URL_LENGTH;
 
@@ -58,6 +62,7 @@ export default function URLAnalysisPage() {
     if (!isValidLength) return;
 
     setState({ status: 'loading', data: null, errorMessage: null });
+    setIncidentData(null); // Reset incident data on new scan
     try {
       const result = await analyseURL(url.trim());
       setState({ status: 'success', data: result, errorMessage: null });
@@ -73,7 +78,22 @@ export default function URLAnalysisPage() {
 
   function handleReset() {
     setState({ status: 'idle', data: null, errorMessage: null });
+    setIncidentData(null);
     setUrl('');
+  }
+
+  async function handleIncidentResponse() {
+    if (!state.data) return;
+    setIncidentLoading(true);
+    try {
+      const codes = state.data.evidence.map((e: any) => e.code);
+      const result = await getIncidentGuidance(codes, 'URL');
+      setIncidentData(result);
+    } catch (err) {
+      alert('Failed to load incident guidance. Please try again.');
+    } finally {
+      setIncidentLoading(false);
+    }
   }
 
   const data = state.data;
@@ -192,6 +212,49 @@ export default function URLAnalysisPage() {
               <RiskBadge level={data.label} size="lg" />
             </div>
             <ScoreBar score={data.score} label={data.label} />
+
+            {/* F4: Emergency Response Button */}
+            <button
+              onClick={handleIncidentResponse}
+              disabled={incidentLoading}
+              className="mt-4 w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 shadow-[0_0_15px_rgba(220,38,38,0.3)] flex items-center justify-center gap-2"
+            >
+              {incidentLoading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Generating Action Plan...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                  Did you interact with this URL? Get Emergency Response
+                </>
+              )}
+            </button>
+
+            {/* F4: Incident Guidance Display */}
+            {incidentData && (
+              <div className="mt-6 border border-red-500/50 bg-red-500/5 rounded-xl p-5 animate-fade-in">
+                <h3 className="text-lg font-bold text-red-400 mb-3 flex items-center gap-2">
+                  🚨 Emergency Response Plan ({incidentData.severity})
+                </h3>
+                <p className="text-sm text-slate-300 mb-4">{incidentData.disclaimer}</p>
+                <div className="space-y-3">
+                  {incidentData.actions.map((action: any) => (
+                    <div key={action.step} className="flex gap-3 bg-slate-900/50 p-3 rounded-lg border border-slate-700">
+                      <span className="flex-shrink-0 w-6 h-6 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center text-sm font-bold">
+                        {action.step}
+                      </span>
+                      <div>
+                        <h4 className="font-semibold text-slate-200 text-sm">{action.title}</h4>
+                        <p className="text-xs text-slate-400 mt-0.5">{action.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="mt-4 flex gap-4 text-sm flex-wrap">
               <span className="text-slate-500">
                 Score type: <span className="text-slate-300">{data.score_type}</span>

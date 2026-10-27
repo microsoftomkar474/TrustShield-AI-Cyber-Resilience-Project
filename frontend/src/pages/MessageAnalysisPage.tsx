@@ -1,6 +1,6 @@
 ﻿import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { analyseMessage } from '../services/api';
+import { analyseMessage, getIncidentGuidance } from '../services/api';
 import type { MessageScanResponse, AnalysisState } from '../types/api';
 import RiskBadge from '../components/RiskBadge';
 import ScoreBar from '../components/ScoreBar';
@@ -16,6 +16,10 @@ export default function MessageAnalysisPage() {
     errorMessage: null,
   });
 
+  // F4: Incident Response state
+  const [incidentData, setIncidentData] = useState<any>(null);
+  const [incidentLoading, setIncidentLoading] = useState(false);
+
   const trimmedMessage = message.trim();
   const isValid = trimmedMessage.length > 0 &&
     trimmedMessage.length <= MAX_MESSAGE_LENGTH;
@@ -30,6 +34,7 @@ export default function MessageAnalysisPage() {
       data: null,
       errorMessage: null,
     });
+    setIncidentData(null); // Reset incident data on new scan
 
     try {
       const result = await analyseMessage(trimmedMessage);
@@ -57,6 +62,21 @@ export default function MessageAnalysisPage() {
       data: null,
       errorMessage: null,
     });
+    setIncidentData(null);
+  }
+
+  async function handleIncidentResponse() {
+    if (!state.data) return;
+    setIncidentLoading(true);
+    try {
+      const codes = state.data.evidence.map((e: any) => e.code);
+      const result = await getIncidentGuidance(codes, 'MESSAGE');
+      setIncidentData(result);
+    } catch (err) {
+      alert('Failed to load incident guidance. Please try again.');
+    } finally {
+      setIncidentLoading(false);
+    }
   }
 
   const result = state.data;
@@ -200,6 +220,48 @@ export default function MessageAnalysisPage() {
             <p className="mt-2 text-xs text-slate-500">
               Score type: <span className="text-slate-400">{result.score_type}</span> · Engine: <span className="font-mono text-slate-400">{result.model_or_feed_version}</span>
             </p>
+
+            {/* F4: Emergency Response Button */}
+            <button
+              onClick={handleIncidentResponse}
+              disabled={incidentLoading}
+              className="mt-4 w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 shadow-[0_0_15px_rgba(220,38,38,0.3)] flex items-center justify-center gap-2"
+            >
+              {incidentLoading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Generating Action Plan...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                  Did you interact with this message? Get Emergency Response
+                </>
+              )}
+            </button>
+
+            {/* F4: Incident Guidance Display */}
+            {incidentData && (
+              <div className="mt-6 border border-red-500/50 bg-red-500/5 rounded-xl p-5 animate-fade-in">
+                <h3 className="text-lg font-bold text-red-400 mb-3 flex items-center gap-2">
+                  🚨 Emergency Response Plan ({incidentData.severity})
+                </h3>
+                <p className="text-sm text-slate-300 mb-4">{incidentData.disclaimer}</p>
+                <div className="space-y-3">
+                  {incidentData.actions.map((action: any) => (
+                    <div key={action.step} className="flex gap-3 bg-slate-900/50 p-3 rounded-lg border border-slate-700">
+                      <span className="flex-shrink-0 w-6 h-6 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center text-sm font-bold">
+                        {action.step}
+                      </span>
+                      <div>
+                        <h4 className="font-semibold text-slate-200 text-sm">{action.title}</h4>
+                        <p className="text-xs text-slate-400 mt-0.5">{action.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div>
