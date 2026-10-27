@@ -1,0 +1,162 @@
+[
+    {
+        "message": "Hi, your delivery is scheduled for tomorrow.",
+        "label": "benign"
+    },
+    {
+        "message": "Can we move the meeting to 3pm?",
+        "label": "benign"
+    },
+    {
+        "message": "Your Amazon order #12345 has been shipped.",
+        "label": "benign"
+    },
+    {
+        "message": "Reminder: Your dentist appointment is on Friday.",
+        "label": "benign"
+    },
+    {
+        "message": "Thanks for your purchase. Your receipt is attached.",
+        "label": "benign"
+    },
+    {
+        "message": "Hey, are we still on for lunch?",
+        "label": "benign"
+    },
+    {
+        "message": "Your monthly bank statement is available online.",
+        "label": "benign"
+    },
+    {
+        "message": "Welcome to the team! Here is your onboarding schedule.",
+        "label": "benign"
+    },
+    {
+        "message": "The project deadline has been extended to next week.",
+        "label": "benign"
+    },
+    {
+        "message": "We're having a sale on shoes this weekend!",
+        "label": "benign"
+    },
+    {
+        "message": "Happy birthday! Hope you have a great day.",
+        "label": "benign"
+    },
+    {
+        "message": "Please review the attached document when you have time.",
+        "label": "benign"
+    },
+    {
+        "message": "Your flight is confirmed. Boarding at 9am.",
+        "label": "benign"
+    },
+    {
+        "message": "Let me know if you need any help with the report.",
+        "label": "benign"
+    },
+    {
+        "message": "The IT department will be conducting maintenance tonight.",
+        "label": "benign"
+    },
+    {
+        "message": "Your subscription to Netflix has been renewed.",
+        "label": "benign"
+    },
+    {
+        "message": "Please find the invoice attached.",
+        "label": "benign"
+    },
+    {
+        "message": "Your password has been successfully changed.",
+        "label": "benign"
+    },
+    {
+        "message": "The package was delivered to your front door.",
+        "label": "benign"
+    },
+    {
+        "message": "Meeting has been moved to conference room B.",
+        "label": "benign"
+    },
+    {
+        "message": "URGENT: Your account is suspended. Click http://bit.ly/3xyz to verify your password immediately.",
+        "label": "malicious"
+    },
+    {
+        "message": "Dear Customer, we detected unusual activity. Please share your OTP and password to restore access.",
+        "label": "malicious"
+    },
+    {
+        "message": "Your bank account is locked. Verify your identity at http://192.168.1.1/verify",
+        "label": "malicious"
+    },
+    {
+        "message": "You have won a $1000 gift card! Click here to claim now.",
+        "label": "malicious"
+    },
+    {
+        "message": "Send 0.05 Bitcoin to release your locked account.",
+        "label": "malicious"
+    },
+    {
+        "message": "Buy a $200 Google Play gift card and share the code immediately.",
+        "label": "malicious"
+    },
+    {
+        "message": "Your Netflix account is suspended. Update your payment info at http://netflix-account-update.top",
+        "label": "malicious"
+    },
+    {
+        "message": "Congratulations! You've been selected for a free iPhone. Click http://free-gift-card.icu",
+        "label": "malicious"
+    },
+    {
+        "message": "Your Apple ID is locked. Verify at http://apple-id-verify.site/secure",
+        "label": "malicious"
+    },
+    {
+        "message": "URGENT: Your SBI account is suspended. Share your CVV and PIN to restore.",
+        "label": "malicious"
+    },
+    {
+        "message": "We detected a virus on your computer. Call this number immediately: 1800-1234.",
+        "label": "malicious"
+    },
+    {
+        "message": "Your PayPal account has been limited. Click http://paypal.secure-login.com to fix.",
+        "label": "malicious"
+    },
+    {
+        "message": "Final warning: Your account will be deleted unless you verify your password at http://verify-account.xyz",
+        "label": "malicious"
+    },
+    {
+        "message": "You have a pending wire transfer. Confirm your bank account number and routing number.",
+        "label": "malicious"
+    },
+    {
+        "message": "Please share your Aadhaar number and OTP to complete KYC verification.",
+        "label": "malicious"
+    },
+    {
+        "message": "URGENT: Your Amazon order is on hold. Confirm your credit card number at http://amazon.verify-order.net",
+        "label": "malicious"
+    },
+    {
+        "message": "You have won a lottery! Send $500 to claim your prize.",
+        "label": "malicious"
+    },
+    {
+        "message": "Click here to reset your password: http://192.0.2.1/login/verify-account",
+        "label": "malicious"
+    },
+    {
+        "message": "Your WhatsApp account will be suspended. Verify your phone number at http://whatsapp-verify.buzz/confirm",
+        "label": "malicious"
+    },
+    {
+        "message": "Immediate action required: Your Microsoft account has been hacked. Click http://microsoft-support.online/fix",
+        "label": "malicious"
+    }
+]

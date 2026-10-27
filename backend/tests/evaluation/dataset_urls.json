@@ -1,0 +1,162 @@
+[
+    {
+        "url": "https://www.google.com",
+        "label": "benign"
+    },
+    {
+        "url": "https://github.com/user/repo",
+        "label": "benign"
+    },
+    {
+        "url": "https://www.wikipedia.org/wiki/Phishing",
+        "label": "benign"
+    },
+    {
+        "url": "https://stackoverflow.com/questions/12345",
+        "label": "benign"
+    },
+    {
+        "url": "https://www.amazon.com/products/item/123",
+        "label": "benign"
+    },
+    {
+        "url": "https://www.linkedin.com/in/username",
+        "label": "benign"
+    },
+    {
+        "url": "https://www.microsoft.com/en-us/windows",
+        "label": "benign"
+    },
+    {
+        "url": "https://www.apple.com/iphone",
+        "label": "benign"
+    },
+    {
+        "url": "https://www.netflix.com/browse",
+        "label": "benign"
+    },
+    {
+        "url": "https://www.bbc.com/news",
+        "label": "benign"
+    },
+    {
+        "url": "https://www.nytimes.com/section/technology",
+        "label": "benign"
+    },
+    {
+        "url": "https://www.reddit.com/r/cybersecurity",
+        "label": "benign"
+    },
+    {
+        "url": "https://www.paypal.com/signin",
+        "label": "benign"
+    },
+    {
+        "url": "https://www.bankofamerica.com/login",
+        "label": "benign"
+    },
+    {
+        "url": "https://www.chase.com/personal",
+        "label": "benign"
+    },
+    {
+        "url": "https://www.hdfcbank.com/personal",
+        "label": "benign"
+    },
+    {
+        "url": "https://www.icicibank.com/personal",
+        "label": "benign"
+    },
+    {
+        "url": "https://www.airbnb.com/rooms/123",
+        "label": "benign"
+    },
+    {
+        "url": "https://www.uber.com/ride",
+        "label": "benign"
+    },
+    {
+        "url": "https://www.zomato.com/restaurants",
+        "label": "benign"
+    },
+    {
+        "url": "http://192.168.1.1/login/verify",
+        "label": "malicious"
+    },
+    {
+        "url": "http://10.0.0.1/account/update",
+        "label": "malicious"
+    },
+    {
+        "url": "https://paypal.secure-login.com/auth",
+        "label": "malicious"
+    },
+    {
+        "url": "https://amazon.verify-order.net/account",
+        "label": "malicious"
+    },
+    {
+        "url": "https://bit.ly/3xYz123",
+        "label": "malicious"
+    },
+    {
+        "url": "https://tinyurl.com/somelink",
+        "label": "malicious"
+    },
+    {
+        "url": "http://freesite.tk/login",
+        "label": "malicious"
+    },
+    {
+        "url": "https://verify-account.xyz/secure",
+        "label": "malicious"
+    },
+    {
+        "url": "http://192.0.2.1/login/verify-account",
+        "label": "malicious"
+    },
+    {
+        "url": "https://a.b.c.evil.com/login",
+        "label": "malicious"
+    },
+    {
+        "url": "http://legitimate.com@evil.com/page",
+        "label": "malicious"
+    },
+    {
+        "url": "https://example.com/%70%61%79%70%61%6C/%6C%6F%67%69%6E",
+        "label": "malicious"
+    },
+    {
+        "url": "http://evil.com/suspend/account",
+        "label": "malicious"
+    },
+    {
+        "url": "https://secure-bank.verify-now.club",
+        "label": "malicious"
+    },
+    {
+        "url": "https://netflix-account-update.top/login",
+        "label": "malicious"
+    },
+    {
+        "url": "http://free-gift-card.icu/claim",
+        "label": "malicious"
+    },
+    {
+        "url": "https://apple-id-verify.site/secure",
+        "label": "malicious"
+    },
+    {
+        "url": "https://microsoft-support.online/fix",
+        "label": "malicious"
+    },
+    {
+        "url": "https://whatsapp-verify.buzz/confirm",
+        "label": "malicious"
+    },
+    {
+        "url": "http://192.168.100.5/verify/suspend",
+        "label": "malicious"
+    }
+]
