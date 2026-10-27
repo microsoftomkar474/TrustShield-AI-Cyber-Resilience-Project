@@ -71,6 +71,24 @@ export async function getIncidentGuidance(
 }
 
 /**
+ * Generate a structured investigation report.
+ */
+export async function generateReport(
+  scanType: 'url' | 'message',
+  scanData: any
+): Promise<any> {
+  try {
+    const response = await apiClient.post('/generate-report', {
+      scan_type: scanType,
+      scan_data: scanData,
+    });
+    return response.data;
+  } catch (error) {
+    throw extractError(error, 'Report generation failed');
+  }
+}
+
+/**
  * Check backend health.
  * Used to show connection status in the dashboard.
  */

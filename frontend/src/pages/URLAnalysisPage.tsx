@@ -6,7 +6,7 @@
  */
 
 import { useState } from 'react';
-import { analyseURL, getIncidentGuidance } from '../services/api';
+import { analyseURL, getIncidentGuidance, generateReport } from '../services/api';
 import type { URLScanResponse, AnalysisState } from '../types/api';
 import RiskBadge from '../components/RiskBadge';
 import ScoreBar from '../components/ScoreBar';
@@ -93,6 +93,24 @@ export default function URLAnalysisPage() {
       alert('Failed to load incident guidance. Please try again.');
     } finally {
       setIncidentLoading(false);
+    }
+  }
+
+  async function handleDownloadReport() {
+    if (!state.data) return;
+    try {
+      const result = await generateReport('url', state.data);
+      const blob = new Blob([JSON.stringify(result.report_data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `trustshield-report-${result.report_id}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Failed to generate report. Please try again.');
     }
   }
 
@@ -254,6 +272,15 @@ export default function URLAnalysisPage() {
                 </div>
               </div>
             )}
+
+            {/* F6: Download Report Button */}
+            <button
+              onClick={handleDownloadReport}
+              className="mt-3 w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+              Download Investigation Report (JSON)
+            </button>
 
             <div className="mt-4 flex gap-4 text-sm flex-wrap">
               <span className="text-slate-500">
