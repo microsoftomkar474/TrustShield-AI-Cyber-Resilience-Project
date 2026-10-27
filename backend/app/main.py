@@ -74,7 +74,7 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 # ============================================================
 # Include API routes
 # ============================================================
-app.include_router(api_router)
+app.include_router(api_router, prefix="/api/v1")
 
 # ============================================================
 # Health check endpoint

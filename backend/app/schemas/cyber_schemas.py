@@ -239,3 +239,38 @@ class MessageScanResponse(BaseModel):
 
     # --- Error field ---
     error: Optional[str] = Field(default=None)
+
+
+# ============================================================
+# F4: Incident Assistant Schemas
+# ============================================================
+
+class IncidentGuidanceRequest(BaseModel):
+    """Request body for POST /api/v1/cyber/incident-guidance"""
+    
+    indicator_codes: List[str] = Field(
+        ..., 
+        description="List of indicator codes detected from a previous scan"
+    )
+    context: str = Field(
+        default="URL", 
+        description="Whether this is from a URL or MESSAGE scan"
+    )
+
+
+class IncidentAction(BaseModel):
+    """A single step in the incident response plan."""
+    
+    step: int
+    title: str
+    description: str
+
+
+class IncidentGuidanceResponse(BaseModel):
+    """Response body for POST /api/v1/cyber/incident-guidance"""
+    
+    status: str = "success"
+    severity: str = Field(description="'CRITICAL' or 'HIGH'")
+    context: str
+    actions: List[IncidentAction]
+    disclaimer: str
