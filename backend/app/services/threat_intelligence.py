@@ -98,9 +98,9 @@ class ThreatIntelligenceService:
                     self.urlhaus_url + "url/",
                     data={"url": url},   # Form data, not JSON
                     headers={
-    "Content-Type": "application/x-www-form-urlencoded",
-    "Auth-Key": self.urlhaus_auth_key,
-},
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "Auth-Key": self.urlhaus_auth_key,
+                    },
                 )
                 response.raise_for_status()
                 data = response.json()
@@ -231,3 +231,58 @@ class ThreatIntelligenceService:
         Used by the risk assessor to override rule-based score.
         """
         return any(r.found and not r.is_mock for r in results)
+
+    @staticmethod
+    def correlate_verdict(results: List[ThreatIntelResult]) -> dict:
+        """
+        Correlate results from multiple threat feeds into a single verdict.
+        
+        Returns a dict with:
+          - verdict: "MALICIOUS" | "CLEAN" | "MIXED" | "INCONCLUSIVE"
+          - confidence: "HIGH" | "MEDIUM" | "LOW"
+          - reasoning: Human-readable explanation
+        """
+        if not results:
+            return {
+                "verdict": "INCONCLUSIVE",
+                "confidence": "LOW",
+                "reasoning": "No threat intelligence feeds were queried.",
+            }
+
+        found_count = sum(1 for r in results if r.found and not r.is_mock)
+        error_count = sum(1 for r in results if r.error)
+        clean_count = sum(1 for r in results if not r.found and not r.error and not r.is_mock)
+        total_queried = len([r for r in results if not r.is_mock])
+
+        if found_count > 0:
+            if error_count > 0:
+                return {
+                    "verdict": "MALICIOUS",
+                    "confidence": "HIGH",
+                    "reasoning": f"Found in {found_count} feed(s). {error_count} feed(s) unavailable, but confirmed malicious evidence takes precedence.",
+                }
+            return {
+                "verdict": "MALICIOUS",
+                "confidence": "HIGH",
+                "reasoning": f"Confirmed malicious in {found_count} of {total_queried} queried feeds.",
+            }
+
+        if error_count == total_queried:
+            return {
+                "verdict": "INCONCLUSIVE",
+                "confidence": "LOW",
+                "reasoning": "All queried threat intelligence feeds were unavailable. Local analysis still applies.",
+            }
+
+        if error_count > 0 and clean_count > 0:
+            return {
+                "verdict": "MIXED",
+                "confidence": "MEDIUM",
+                "reasoning": f"{clean_count} feed(s) returned clean results, but {error_count} feed(s) were unavailable. Incomplete evidence.",
+            }
+
+        return {
+            "verdict": "CLEAN",
+            "confidence": "MEDIUM",
+            "reasoning": f"Not found in any of the {total_queried} queried feeds. This is not proof of safety.",
+        }

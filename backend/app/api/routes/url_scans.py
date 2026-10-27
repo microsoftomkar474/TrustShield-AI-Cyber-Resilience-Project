@@ -58,6 +58,10 @@ async def create_url_scan(request: URLScanRequest) -> URLScanResponse:
         # Step 2 — Threat intelligence lookups (optional, graceful failure)
         ti_results = await _threat_intel.check_url(url)
         ti_confirmed = ThreatIntelligenceService.is_confirmed_malicious(ti_results)
+        
+        # Step 2b — Correlate results into a single verdict for explanation
+        ti_correlation = ThreatIntelligenceService.correlate_verdict(ti_results)
+        logger.info(f"TI Correlation: {ti_correlation['verdict']} - {ti_correlation['reasoning']}")
 
         # Step 3 — Risk assessment
         label, score = _risk_assessor.assess_url(indicators, ti_confirmed)
