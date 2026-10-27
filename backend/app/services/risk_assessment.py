@@ -20,14 +20,6 @@ from ..schemas.cyber_schemas import URLIndicator, MessageIndicator, RiskLevel
 # ============================================================
 # Risk contribution weights — documented and tunable
 # ============================================================
-#
-# These weights assign a numeric score contribution to each
-# risk_contribution level. They were chosen to reflect relative
-# severity:
-#   HIGH   → a single indicator of this type can push into MEDIUM
-#   MEDIUM → meaningful concern, several needed for HIGH classification
-#   LOW    → contextual signal, many needed to cross a threshold
-#
 CONTRIBUTION_WEIGHTS = {
     "HIGH": 0.40,
     "MEDIUM": 0.20,
@@ -35,14 +27,8 @@ CONTRIBUTION_WEIGHTS = {
 }
 
 # Classification thresholds
-# Chosen to balance sensitivity vs. false positives for rule-based analysis.
-THRESHOLD_HIGH = 0.45    # score >= 0.45 → HIGH risk
-                         # Rationale: a single HIGH-weight indicator (0.40) +
-                         # any LOW indicator (0.08) = 0.48 correctly classifies
-                         # as HIGH. A standalone HIGH indicator (0.40) alone
-                         # falls into MEDIUM, which is intentionally conservative.
-THRESHOLD_MEDIUM = 0.28  # score >= 0.28 → MEDIUM risk
-# Below THRESHOLD_MEDIUM → LOW risk
+THRESHOLD_HIGH = 0.45
+THRESHOLD_MEDIUM = 0.28
 
 # Known limitations string used in all responses
 LIMITATIONS_TEXT = (
@@ -56,10 +42,6 @@ LIMITATIONS_TEXT = (
 class RiskAssessor:
     """
     Converts detected indicators into a final risk verdict.
-
-    Usage:
-        assessor = RiskAssessor()
-        label, score = assessor.assess_url(indicators)
     """
 
     def assess_url(
@@ -69,16 +51,8 @@ class RiskAssessor:
     ) -> tuple[RiskLevel, float]:
         """
         Calculate risk level and score from URL indicators.
-
-        Args:
-            indicators: List of URLIndicator objects from URLAnalyzer
-            threat_intel_confirmed: True if a TI feed positively matched
-
-        Returns:
-            (RiskLevel, float) — classification and score in [0.0, 1.0]
         """
         if threat_intel_confirmed:
-            # Threat intel match overrides rule-based score
             return RiskLevel.HIGH, 1.0
 
         score = self._compute_score(
@@ -94,43 +68,21 @@ class RiskAssessor:
     ) -> tuple[RiskLevel, float]:
         """
         Calculate risk level and score for a message.
-
-        The overall message score is the maximum of:
-          1. Score from message-level indicators
-          2. Highest URL risk score (if any URLs were analysed)
-
-        This avoids double-counting when a message has both suspicious
-        text and suspicious URLs.
-
-        Args:
-            message_indicators: Indicators from MessageAnalyzer
-            url_labels: RiskLevel values from analysed embedded URLs
-
-        Returns:
-            (RiskLevel, float)
         """
         msg_score = self._compute_score(
             [ind.risk_contribution for ind in message_indicators]
         )
 
-        # Convert URL labels to scores for comparison
         url_scores = [self._label_to_score(lbl) for lbl in url_labels]
         max_url_score = max(url_scores) if url_scores else 0.0
 
-        # Take the higher of message score and highest URL score
         combined_score = max(msg_score, max_url_score)
 
-        # But if both message AND URL signals exist, add a small penalty
-        # to reflect the compounding risk — capped at 1.0
         if url_scores and msg_score > 0:
             combined_score = min(1.0, combined_score + 0.10)
 
         label = self._classify(combined_score)
         return label, round(combined_score, 4)
-
-    # ----------------------------------------------------------
-    # Private helpers
-    # ----------------------------------------------------------
 
     def _compute_score(self, contributions: List[str]) -> float:
         """Sum contribution weights, capped at 1.0."""
@@ -186,7 +138,6 @@ class RiskAssessor:
                 "vigilant. Do not enter sensitive information on unexpected pages."
             )
 
-        # Code-specific recommendations
         if "URL_IP_ADDRESS_HOST" in codes:
             recs.append(
                 "The URL uses an IP address as the host. Legitimate services "
