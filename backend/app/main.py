@@ -36,7 +36,7 @@ app = FastAPI(
         "**POST** `/api/v1/cyber/url-scans` — Analyse a URL\n\n"
         "**POST** `/api/v1/cyber/message-scans` — Analyse a suspicious message"
     ),
-    version="1.0.0",
+    version="1.1.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
@@ -45,10 +45,19 @@ app = FastAPI(
 # CORS Middleware
 # Allows the React frontend (on a different port) to call this API.
 # In production, restrict origins to the exact frontend URL.
+# F10: Warn loudly if wildcard origins are configured with credentials.
 # ============================================================
+_cors_origins = settings.cors_origins_list
+if "*" in _cors_origins:
+    logger.critical(
+        "SECURITY WARNING: CORS_ORIGINS contains '*' (wildcard). "
+        "This is unsafe when allow_credentials=True. "
+        "Set CORS_ORIGINS to specific frontend origins in production."
+    )
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
@@ -60,6 +69,8 @@ app.add_middleware(
 # ============================================================
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    # F9: Log the real exception server-side only.
+    # Never return exception class names or internal details to the client.
     logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
     return JSONResponse(
         status_code=500,
@@ -67,7 +78,7 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
             "status": "error",
             "module": "cyber_resilience",
             "error": "An unexpected server error occurred.",
-            "detail": type(exc).__name__,
+            "detail": "internal_error",
         },
     )
 

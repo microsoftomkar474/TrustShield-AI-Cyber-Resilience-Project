@@ -6,7 +6,7 @@
  *   backend/app/schemas/cyber_schemas.py
  */
 
-export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
+export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'UNKNOWN';
 export type ScoreType = 'rule_based' | 'threat_intel_confirmed' | 'mock';
 
 // --- URL Scan ---
@@ -20,6 +20,7 @@ export interface URLIndicator {
 export interface ThreatIntelResult {
   source: string;
   found: boolean;
+  lookup_status?: 'NOT_CONFIGURED' | 'CLEAN' | 'MALICIOUS' | 'ERROR' | 'TIMEOUT' | 'DISABLED' | null;
   status: string | null;
   queried_at: string | null;
   error: string | null;

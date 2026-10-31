@@ -14,17 +14,21 @@ export default function ScoreBar({ score, label }: ScoreBarProps) {
 
   const fillClass =
     label === 'LOW'
-      ? 'score-bar-fill-low'
+      ? 'score-bar-fill-low bg-emerald-500'
       : label === 'MEDIUM'
-      ? 'score-bar-fill-medium'
-      : 'score-bar-fill-high';
+      ? 'score-bar-fill-medium bg-amber-500'
+      : label === 'HIGH'
+      ? 'score-bar-fill-high bg-red-500'
+      : 'score-bar-fill-unknown bg-slate-500';
 
   const textColor =
     label === 'LOW'
       ? 'text-emerald-400'
       : label === 'MEDIUM'
       ? 'text-amber-400'
-      : 'text-red-400';
+      : label === 'HIGH'
+      ? 'text-red-400'
+      : 'text-slate-400';
 
   return (
     <div className="space-y-2">
@@ -53,6 +57,11 @@ export default function ScoreBar({ score, label }: ScoreBarProps) {
         <span>0.45 — High</span>
         <span>1.0 — Max</span>
       </div>
+      {label === 'UNKNOWN' && (
+        <p className="text-xs text-slate-400 italic bg-slate-800/40 border border-slate-700/50 rounded p-2 mt-2">
+          Assessment inconclusive: Threat intelligence feeds were unavailable and heuristic indicators are limited. Exercise caution.
+        </p>
+      )}
     </div>
   );
 }

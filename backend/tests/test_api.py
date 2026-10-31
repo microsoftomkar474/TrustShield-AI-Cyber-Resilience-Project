@@ -62,7 +62,7 @@ class TestURLScanAPI:
         data = response.json()
         assert data["status"] == "success"
         assert data["module"] == "cyber_resilience"
-        assert data["label"] in ("LOW", "MEDIUM", "HIGH")
+        assert data["label"] in ("LOW", "MEDIUM", "HIGH", "UNKNOWN")
         assert "score" in data
         assert "evidence" in data
         assert "limitations" in data
@@ -213,7 +213,7 @@ class TestMessageScanAPI:
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
-        assert data["label"] in ("LOW", "MEDIUM", "HIGH")
+        assert data["label"] in ("LOW", "MEDIUM", "HIGH", "UNKNOWN")
 
     def test_scan_phishing_message_password_otp(self):
         """Classic phishing message should return HIGH risk."""

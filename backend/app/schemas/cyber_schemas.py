@@ -4,6 +4,10 @@ Pydantic schemas for API request/response models.
 
 These schemas define the public API contract.
 Member 1's main application consumes these exact shapes.
+
+Upgrade history:
+- v1.1: F5 — Added UNKNOWN to RiskLevel (insufficient evidence state)
+- v1.1: F7 — Added LookupStatus enum and lookup_status field to ThreatIntelResult
 """
 
 from pydantic import BaseModel, Field, field_validator
@@ -17,10 +21,18 @@ import re
 # ============================================================
 
 class RiskLevel(str, Enum):
-    """Three-tier risk classification used across all analysis types."""
+    """
+    Risk classification used across all analysis types.
+
+    UNKNOWN: Returned when evidence is insufficient for a reliable verdict
+             (e.g. all threat-intelligence feeds were unavailable and
+             heuristic indicators are borderline). Callers must NOT treat
+             UNKNOWN as LOW — it means 'we do not know'.
+    """
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
+    UNKNOWN = "UNKNOWN"
 
 
 class ScoreType(str, Enum):
@@ -70,11 +82,40 @@ class URLIndicator(BaseModel):
     )
 
 
+class LookupStatus(str, Enum):
+    """
+    Structured status of a threat-intelligence lookup. (F7)
+
+    This replaces ambiguous boolean found=False which conflated
+    'checked and not found' with 'service unavailable'.
+
+    NOT_CONFIGURED: API key or service is not set up.
+    CLEAN:          Lookup succeeded and URL was not found.
+    MALICIOUS:      Lookup succeeded and URL was confirmed malicious.
+    ERROR:          HTTP error or unexpected response from the feed.
+    TIMEOUT:        Network timeout — feed was not consulted.
+    DISABLED:       Threat intelligence is disabled in configuration.
+    """
+    NOT_CONFIGURED = "NOT_CONFIGURED"
+    CLEAN = "CLEAN"
+    MALICIOUS = "MALICIOUS"
+    ERROR = "ERROR"
+    TIMEOUT = "TIMEOUT"
+    DISABLED = "DISABLED"
+
+
 class ThreatIntelResult(BaseModel):
     """Result from an external threat-intelligence feed."""
 
     source: str = Field(description="Name of the intelligence feed")
     found: bool = Field(description="Whether the URL was found in the feed")
+    lookup_status: LookupStatus = Field(
+        default=LookupStatus.CLEAN,
+        description=(
+            "Structured lookup outcome. Use this — not found=False — "
+            "to distinguish 'checked clean' from 'service unavailable'."
+        ),
+    )
     status: Optional[str] = Field(
         default=None,
         description="Feed-specific status string (e.g. 'online', 'phishing')"

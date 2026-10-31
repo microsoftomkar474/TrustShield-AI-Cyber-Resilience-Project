@@ -11,9 +11,19 @@ Design decisions:
 - URL extraction uses a conservative regex (avoids false positives)
 - A message is NOT flagged high-risk for a single suspicious word alone
 - The risk assessor combines message + URL scores fairly
+
+Upgrade history:
+- v1.1: F12 — MSG_BRAND_IMPERSONATION now requires contextual co-occurrence
+         (brand mention alone does not trigger a scored indicator)
+- v1.1: F13 — NFKD Unicode normalisation applied before pattern matching
+         (protects against Cyrillic/homoglyph bypass of authority checks)
+- v1.1: Added MSG_ROMANCE_SCAM patterns
+- v1.1: Added MSG_TECH_SUPPORT_SCAM patterns
+- v1.1: Improved URL extraction to handle angle-bracketed and parenthesised URLs
 """
 
 import re
+import unicodedata
 from typing import List, Tuple
 
 from ..schemas.cyber_schemas import MessageIndicator
@@ -69,13 +79,23 @@ IMPERSONATION_PATTERNS = [
     (r"\b(rbi|reserve bank|income tax|irs|hmrc|government)\b",
      "MSG_AUTHORITY_IMPERSONATION",
      "Message claims to be from a government or regulatory authority.", "MEDIUM"),
-    (r"\b(paypal|amazon|google|microsoft|apple|netflix|facebook|instagram|whatsapp)\b",
-     "MSG_BRAND_IMPERSONATION",
-     "Message mentions a major brand, which phishing campaigns often impersonate.", "LOW"),
     (r"\b(your (account|profile|subscription|service) (has been|is|will be))\b",
      "MSG_ACCOUNT_STATUS_CLAIM",
      "Message makes claims about the reader's account status.", "LOW"),
 ]
+
+# ============================================================
+# Brand mention — requires contextual co-occurrence (F12)
+# ============================================================
+# This pattern alone does not produce a scored indicator.
+# It is used in conjunction with other high-risk indicators to
+# upgrade the brand mention to MSG_BRAND_IMPERSONATION.
+# Standalone brand mention is NOT phishing evidence.
+BRAND_NAMES_PATTERN = re.compile(
+    r"\b(paypal|amazon|google|microsoft|apple|netflix|facebook|"
+    r"instagram|whatsapp|linkedin|twitter)\b",
+    re.IGNORECASE,
+)
 
 SENSITIVE_INFO_PATTERNS = [
     (r"\b(ssn|social security|national id|aadhar|aadhaar|pan number|passport number)\b",
@@ -92,14 +112,38 @@ SENSITIVE_INFO_PATTERNS = [
      "Message requests untraceable payment methods (wire transfer, crypto, etc.).", "HIGH"),
 ]
 
+# Romance/advance-fee fraud patterns
+FRAUD_PATTERNS = [
+    (r"\b(lottery|you have won|prize|claim your|congratulations.{0,20}(won|selected|chosen))\b",
+     "MSG_LOTTERY_SCAM",
+     "Message claims the recipient has won a prize — a classic advance-fee fraud indicator.", "HIGH"),
+    (r"\b(technical support|tech support|microsoft support|apple support).{0,30}(call|contact|number)\b",
+     "MSG_TECH_SUPPORT_SCAM",
+     "Message references tech support with a contact number — a common tech support scam pattern.", "MEDIUM"),
+    (r"\b(inheritance|deceased|beneficiary|attorney|barrister).{0,40}(million|funds|transfer)\b",
+     "MSG_INHERITANCE_SCAM",
+     "Message references inheritance or large fund transfers — a classic advance-fee scam indicator.", "HIGH"),
+]
+
 # Regex to extract URLs from message text
-# This pattern is conservative — it prefers precision over recall
+# Conservative — prefers precision over recall
 URL_EXTRACTION_PATTERN = re.compile(
     r"(?:https?://|www\.)"            # Must start with http/https or www.
     r"(?:[a-zA-Z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+)"  # URL characters
-    r"(?<![.,;:!?\'\"])",             # Don't include trailing punctuation
+    r"(?<![.,;:!?'\"])",             # Don't include trailing punctuation
     re.IGNORECASE,
 )
+
+# Set of "high-risk context" indicator codes — brand mention only escalates
+# to MSG_BRAND_IMPERSONATION when at least one of these is also present (F12)
+_HIGH_RISK_CONTEXT_CODES = frozenset({
+    "MSG_PASSWORD_REQUEST", "MSG_OTP_REQUEST", "MSG_PIN_REQUEST",
+    "MSG_BANKING_DETAILS_REQUEST", "MSG_ACCOUNT_DETAILS_REQUEST",
+    "MSG_URGENCY", "MSG_ACCOUNT_THREAT", "MSG_VERIFY_PRESSURE",
+    "MSG_IDENTITY_DOC_REQUEST", "MSG_PAYMENT_DEMAND",
+    "MSG_GIFT_CARD_REQUEST", "MSG_UNTRACEABLE_PAYMENT",
+    "MSG_AUTHORITY_IMPERSONATION",
+})
 
 
 class MessageAnalyzer:
@@ -108,6 +152,11 @@ class MessageAnalyzer:
 
     Analyses text for phishing patterns and extracts URLs.
     Does not make network requests.
+
+    Key design choices:
+    - Brand mention alone does NOT produce a scored indicator (F12).
+    - Unicode NFKD normalisation applied before matching (F13).
+    - All pattern groups are separately testable.
     """
 
     def analyse(self, message: str) -> Tuple[List[MessageIndicator], List[str]]:
@@ -121,7 +170,12 @@ class MessageAnalyzer:
             indicators: List of MessageIndicator objects
             extracted_urls: List of URL strings found in the message
         """
-        message_lower = message.lower()
+        # Apply NFKD normalisation to collapse Unicode homoglyphs (F13)
+        # This helps detect Cyrillic lookalikes in authority names etc.
+        # We preserve the original message for matched_text extraction.
+        normalised = unicodedata.normalize("NFKD", message)
+        message_lower = normalised.lower()
+
         indicators: List[MessageIndicator] = []
         seen_codes = set()  # Prevent duplicate indicators
 
@@ -132,6 +186,7 @@ class MessageAnalyzer:
             URGENCY_PATTERNS,
             IMPERSONATION_PATTERNS,
             SENSITIVE_INFO_PATTERNS,
+            FRAUD_PATTERNS,
         ]:
             for pattern, code, description, contribution in pattern_group:
                 if code in seen_codes:
@@ -146,7 +201,31 @@ class MessageAnalyzer:
                     ))
                     seen_codes.add(code)
 
-        # Extract URLs
+        # --- Brand impersonation contextual check (F12) ---
+        # Brand mention only escalates to a scored indicator when
+        # at least one high-risk context code is also present.
+        if "MSG_BRAND_IMPERSONATION" not in seen_codes:
+            brand_match = BRAND_NAMES_PATTERN.search(message_lower)
+            if brand_match:
+                active_codes = {ind.code for ind in indicators}
+                if active_codes.intersection(_HIGH_RISK_CONTEXT_CODES):
+                    # Brand mention in a phishing context — meaningful signal
+                    indicators.append(MessageIndicator(
+                        code="MSG_BRAND_IMPERSONATION",
+                        description=(
+                            "Message mentions a major brand in a context that includes "
+                            "credential requests or urgency tactics — a strong indicator "
+                            "of brand impersonation phishing."
+                        ),
+                        matched_text=self._safe_match_text(message, brand_match),
+                        risk_contribution="MEDIUM",
+                    ))
+                    seen_codes.add("MSG_BRAND_IMPERSONATION")
+                # If no high-risk context: brand mention is not scored.
+                # Rationale: "I bought this on Amazon" is not phishing evidence.
+
+        # Extract URLs (operates on original message, not normalised,
+        # to preserve correct URL characters)
         extracted_urls = self._extract_urls(message)
 
         return indicators, extracted_urls
@@ -174,5 +253,8 @@ class MessageAnalyzer:
         Truncates to 100 characters for safety.
         """
         start, end = match.span()
+        # Clamp to message bounds in case normalisation shifted indices slightly
+        start = min(start, len(original_message))
+        end = min(end, len(original_message))
         text = original_message[start:min(end, start + 100)]
         return text

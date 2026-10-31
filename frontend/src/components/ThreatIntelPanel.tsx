@@ -21,10 +21,28 @@ export default function ThreatIntelPanel({ results }: ThreatIntelPanelProps) {
   return (
     <div className="space-y-3">
       {results.map((result, idx) => {
-        // Determine the visual state
-        const isUnavailable = !!result.error;
-        const isFound = result.found && !isUnavailable;
-        const isClean = !result.found && !isUnavailable && !result.is_mock;
+        // Determine the visual state using structured lookup_status or fallback to error/found
+        const isUnavailable =
+          result.lookup_status === 'ERROR' ||
+          result.lookup_status === 'TIMEOUT' ||
+          result.lookup_status === 'NOT_CONFIGURED' ||
+          result.lookup_status === 'DISABLED' ||
+          !!result.error;
+        const isFound =
+          result.lookup_status === 'MALICIOUS' ||
+          (result.found && !isUnavailable);
+        const isClean =
+          result.lookup_status === 'CLEAN' ||
+          (!result.found && !isUnavailable && !result.is_mock);
+
+        const statusLabel =
+          result.lookup_status === 'NOT_CONFIGURED'
+            ? 'NOT CONFIGURED'
+            : result.lookup_status === 'TIMEOUT'
+            ? 'TIMEOUT'
+            : result.lookup_status === 'DISABLED'
+            ? 'DISABLED'
+            : 'UNAVAILABLE';
 
         return (
           <div
@@ -51,7 +69,7 @@ export default function ThreatIntelPanel({ results }: ThreatIntelPanelProps) {
                 {isUnavailable ? (
                   <span className="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 font-medium tracking-wide flex items-center gap-1">
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                    UNAVAILABLE
+                    {statusLabel}
                   </span>
                 ) : isFound ? (
                   <span className="text-xs px-2 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30 font-medium tracking-wide flex items-center gap-1">
